@@ -21,4 +21,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "eclinic_summer"
 include(":app")
- 
