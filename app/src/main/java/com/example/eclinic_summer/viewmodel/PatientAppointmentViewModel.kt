@@ -51,8 +51,9 @@ class PatientAppointmentViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-    private val _bookingStatus = MutableStateFlow<Result<Void?>?>(null)
-    val bookingStatus: StateFlow<Result<Void?>?> = _bookingStatus.asStateFlow()
+    // ✅ zmienione na Result<Unit>
+    private val _bookingStatus = MutableStateFlow<Result<Unit>?>(null)
+    val bookingStatus: StateFlow<Result<Unit>?> = _bookingStatus.asStateFlow()
 
     fun book(slot: Availability) {
         val doctorId = _selectedDoctor.value ?: return
@@ -82,7 +83,7 @@ class PatientAppointmentViewModel @Inject constructor(
                 val updatedSlot = slot.copy(isBooked = true)
                 userRepository.updateAvailability(doctorId, slot, updatedSlot)
 
-
+                // ✅ teraz bookAppointment zwraca Result<Unit>
                 _bookingStatus.value = bookAppointment(appointment)
             } catch (e: Exception) {
                 _bookingStatus.value = Result.failure(e)

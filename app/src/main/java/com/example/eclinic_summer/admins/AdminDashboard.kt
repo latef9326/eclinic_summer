@@ -5,8 +5,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,30 +18,49 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.eclinic_summer.data.model.User
 import com.example.eclinic_summer.viewmodel.AdminViewModel
+import com.example.eclinic_summer.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminDashboard(
     navController: NavController,
-    viewModel: AdminViewModel = hiltViewModel()
+    viewModel: AdminViewModel = hiltViewModel(),
+    authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val doctors by viewModel.doctors.collectAsState()
     val patients by viewModel.patients.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
+
     var selectedTab by remember { mutableStateOf(0) }
-    val tabs = listOf("Doctors", "Patients")
+    val tabs = listOf("Doctors", "Patients", "Appointments")
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Admin Dashboard") })
+            TopAppBar(
+                title = { Text("Admin Dashboard") },
+                actions = {
+                    // Logout button
+                    IconButton(onClick = {
+                        authViewModel.logout()
+                        navController.navigate("login") {
+                            popUpTo(0)
+                        }
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.ExitToApp,
+                            contentDescription = "Logout"
+                        )
+                    }
+                }
+            )
         },
         floatingActionButton = {
             if (selectedTab == 0) {
                 FloatingActionButton(
                     onClick = { navController.navigate("add_doctor") }
                 ) {
-                    Icon(Icons.Default.Add, "Add Doctor")
+                    Icon(Icons.Filled.Add, "Add Doctor")
                 }
             }
         },
@@ -74,8 +95,9 @@ fun AdminDashboard(
                     }
                     selectedTab == 0 -> DoctorList(
                         doctors = doctors,
+                        navController = navController,
                         onEdit = { doctorId ->
-                            navController.navigate("edit_doctor/$doctorId")
+                            navController.navigate("profile/$doctorId")
                         },
                         onDelete = { doctorId ->
                             viewModel.deleteUser(doctorId)
@@ -83,10 +105,15 @@ fun AdminDashboard(
                     )
                     selectedTab == 1 -> PatientList(
                         patients = patients,
+                        navController = navController,
+                        onEdit = { patientId ->
+                            navController.navigate("profile/$patientId")
+                        },
                         onDelete = { patientId ->
                             viewModel.deleteUser(patientId)
                         }
                     )
+                    selectedTab == 2 -> AdminAppointmentsScreen(navController)
                 }
             }
         }
@@ -96,6 +123,7 @@ fun AdminDashboard(
 @Composable
 fun DoctorList(
     doctors: List<User>,
+    navController: NavController,
     onEdit: (String) -> Unit,
     onDelete: (String) -> Unit
 ) {
@@ -107,7 +135,10 @@ fun DoctorList(
             DoctorItem(
                 doctor = doctor,
                 onEdit = { onEdit(doctor.uid) },
-                onDelete = { onDelete(doctor.uid) }
+                onDelete = { onDelete(doctor.uid) },
+                onManageAvailability = {
+                    navController.navigate("manage_availability/${doctor.uid}")
+                }
             )
         }
     }
@@ -117,7 +148,8 @@ fun DoctorList(
 fun DoctorItem(
     doctor: User,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onManageAvailability: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -146,11 +178,14 @@ fun DoctorItem(
                 )
             }
             Row {
+                IconButton(onClick = onManageAvailability) {
+                    Icon(Icons.Filled.DateRange, "Manage Availability")
+                }
                 IconButton(onClick = onEdit) {
-                    Icon(Icons.Default.Edit, "Edit Doctor")
+                    Icon(Icons.Filled.Edit, "Edit Doctor")
                 }
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, "Delete Doctor")
+                    Icon(Icons.Filled.Delete, "Delete Doctor")
                 }
             }
         }
@@ -160,6 +195,8 @@ fun DoctorItem(
 @Composable
 fun PatientList(
     patients: List<User>,
+    navController: NavController,
+    onEdit: (String) -> Unit,
     onDelete: (String) -> Unit
 ) {
     LazyColumn(
@@ -169,6 +206,7 @@ fun PatientList(
         items(patients) { patient ->
             PatientItem(
                 patient = patient,
+                onEdit = { onEdit(patient.uid) },
                 onDelete = { onDelete(patient.uid) }
             )
         }
@@ -178,6 +216,7 @@ fun PatientList(
 @Composable
 fun PatientItem(
     patient: User,
+    onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     Card(
@@ -202,8 +241,13 @@ fun PatientItem(
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, "Delete Patient")
+            Row {
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Filled.Edit, "Edit Patient")
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Filled.Delete, "Delete Patient")
+                }
             }
         }
     }

@@ -76,7 +76,8 @@ fun PatientDashboard(
                                         }
                                     )
                                 }
-                            }
+                            },
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             Text("Book Appointment")
                         }
@@ -96,8 +97,26 @@ fun PatientDashboard(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
+                        // W obu dashboardach zmień:
                         Button(
-                            onClick = { /* TODO */ },
+                            onClick = {
+                                currentUser?.uid?.let {
+                                    navController.navigate("chat_list/$it") // POPRAWIONE: dodano argument
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("My Chats")
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Button(
+                            onClick = {
+                                currentUser?.uid?.let {
+                                    navController.navigate("documents/$it")
+                                }
+                            },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text("My Documents")
@@ -118,6 +137,7 @@ fun PatientDashboard(
                         Text("Logout")
                     }
                 }
-            })
+            }
+        )
     }
 }

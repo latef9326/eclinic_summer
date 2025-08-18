@@ -12,20 +12,17 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ProfileViewModel @Inject constructor(
+class EditPatientViewModel @Inject constructor(
     private val userRepository: UserRepository
 ) : ViewModel() {
-    private val _user = MutableStateFlow<User?>(null)
-    val user: StateFlow<User?> = _user.asStateFlow()
+    private val _patient = MutableStateFlow<User?>(null)
+    val patient: StateFlow<User?> = _patient.asStateFlow()
 
     private val _fullName = MutableStateFlow("")
     val fullName: StateFlow<String> = _fullName.asStateFlow()
 
     private val _email = MutableStateFlow("")
     val email: StateFlow<String> = _email.asStateFlow()
-
-    private val _specialization = MutableStateFlow("")
-    val specialization: StateFlow<String> = _specialization.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -36,16 +33,11 @@ class ProfileViewModel @Inject constructor(
     private val _isSuccess = MutableStateFlow(false)
     val isSuccess: StateFlow<Boolean> = _isSuccess.asStateFlow()
 
-    fun loadUser(userId: String) {
+    fun loadPatient(patientId: String) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                _user.value = userRepository.getUser(userId)
-                _user.value?.let {
-                    _fullName.value = it.fullName
-                    _email.value = it.email
-                    _specialization.value = it.specialization ?: ""
-                }
+                _patient.value = userRepository.getUser(patientId)
                 _error.value = null
             } catch (e: Exception) {
                 _error.value = e
@@ -63,22 +55,17 @@ class ProfileViewModel @Inject constructor(
         _email.value = value
     }
 
-    fun onSpecializationChange(value: String) {
-        _specialization.value = value
-    }
-
-    fun updateUser() {
-        val currentUser = _user.value ?: return
+    fun updatePatient() {
+        val currentPatient = _patient.value ?: return
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val updatedUser = currentUser.copy(
+                val updatedPatient = currentPatient.copy(
                     fullName = fullName.value,
-                    email = email.value,
-                    specialization = specialization.value.ifEmpty { null }
+                    email = email.value
                 )
 
-                userRepository.updateUser(updatedUser)
+                userRepository.updateUser(updatedPatient)
                 _isSuccess.value = true
                 _error.value = null
             } catch (e: Exception) {

@@ -4,9 +4,9 @@ import com.google.firebase.Timestamp
 
 data class Document(
     val documentId: String = "",
-    val ownerId: String = "", // user who uploaded
+    val ownerId: String = "",
     val name: String = "",
     val url: String = "",
-    val uploadedAt: Timestamp = Timestamp.now(),
-    val type: String = "prescription" // or "report", "image", etc.
+    val type: String = "",
+    val uploadedAt: Timestamp = Timestamp.now()
 )

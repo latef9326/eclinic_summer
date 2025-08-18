@@ -43,4 +43,6 @@ object FirebaseModule {
     fun provideUserRepository(
         firestore: FirebaseFirestore
     ): UserRepository = UserRepositoryImpl(firestore)
+
+
 }

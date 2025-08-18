@@ -3,7 +3,6 @@ package com.example.eclinic_summer.data.model.repository
 import android.util.Log
 import com.example.eclinic_summer.data.model.User
 import com.example.eclinic_summer.domain.domainrepository.UserRepository
-import com.example.eclinic_summer.data.model.repository.Availability
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -35,6 +34,7 @@ class UserRepositoryImpl @Inject constructor(
                 .await()
             querySnapshot.documents.mapNotNull { it.toUser() }
         } catch (e: Exception) {
+            Log.e("UserRepository", "Error getting users by role: $role", e)
             emptyList()
         }
     }
@@ -47,6 +47,7 @@ class UserRepositoryImpl @Inject constructor(
                 .await()
             true
         } catch (e: Exception) {
+            Log.e("UserRepository", "Error updating user: ${e.message}", e)
             false
         }
     }
@@ -59,10 +60,12 @@ class UserRepositoryImpl @Inject constructor(
                 .await()
             true
         } catch (e: Exception) {
+            Log.e("UserRepository", "Error deleting user: ${e.message}", e)
             false
         }
     }
 
+    // Dodawanie nowego slotu dostępności
     override suspend fun updateUserAvailability(
         userId: String,
         availability: Availability
@@ -70,16 +73,16 @@ class UserRepositoryImpl @Inject constructor(
         return try {
             firestore.collection("users")
                 .document(userId)
-                .update(
-                    "availability", FieldValue.arrayUnion(availability)
-                )
+                .update("availability", FieldValue.arrayUnion(availability))
                 .await()
             true
         } catch (e: Exception) {
+            Log.e("UserRepository", "Error updating availability: ${e.message}", e)
             false
         }
     }
 
+    // Usuwanie istniejącego slotu dostępności
     override suspend fun removeAvailability(
         userId: String,
         availability: Availability
@@ -87,43 +90,38 @@ class UserRepositoryImpl @Inject constructor(
         return try {
             firestore.collection("users")
                 .document(userId)
-                .update(
-                    "availability", FieldValue.arrayRemove(availability)
-                )
+                .update("availability", FieldValue.arrayRemove(availability))
                 .await()
             true
         } catch (e: Exception) {
+            Log.e("UserRepository", "Error removing availability: ${e.message}", e)
             false
         }
     }
 
+    // Aktualizacja slotu (usuń stary, dodaj nowy)
     override suspend fun updateAvailability(
         userId: String,
         oldSlot: Availability,
         newSlot: Availability
     ): Boolean {
         return try {
-            // Usuń stary slot
             firestore.collection("users")
                 .document(userId)
-                .update(
-                    "availability", FieldValue.arrayRemove(oldSlot)
-                )
+                .update("availability", FieldValue.arrayRemove(oldSlot))
                 .await()
-
-            // Dodaj nowy slot
             firestore.collection("users")
                 .document(userId)
-                .update(
-                    "availability", FieldValue.arrayUnion(newSlot)
-                )
+                .update("availability", FieldValue.arrayUnion(newSlot))
                 .await()
             true
         } catch (e: Exception) {
+            Log.e("UserRepository", "Error updating availability: ${e.message}", e)
             false
         }
     }
 
+    // 🔹 Poprawiona konwersja DocumentSnapshot do User
     private fun DocumentSnapshot.toUser(): User {
         return User(
             uid = id,
@@ -132,15 +130,18 @@ class UserRepositoryImpl @Inject constructor(
             role = getString("role") ?: "patient",
             specialization = getString("specialization"),
             availability = try {
-                val availabilityList = get("availability") as? List<Map<String, Any>>?
-                availabilityList?.map { map ->
-                    Availability(
-                        date = map["date"] as? String ?: "",
-                        dayOfWeek = map["dayOfWeek"] as? String ?: "",
-                        startTime = map["startTime"] as? String ?: "",
-                        endTime = map["endTime"] as? String ?: "",
-                        isBooked = map["isBooked"] as? Boolean ?: false
-                    )
+                val availabilityList = get("availability") as? List<*>
+                availabilityList?.mapNotNull { item ->
+                    when (item) {
+                        is Map<*, *> -> Availability(
+                            date = item["date"] as? String ?: "",
+                            dayOfWeek = item["dayOfWeek"] as? String ?: "",
+                            startTime = item["startTime"] as? String ?: "",
+                            endTime = item["endTime"] as? String ?: "",
+                            isBooked = item["isBooked"] as? Boolean ?: false
+                        )
+                        else -> null
+                    }
                 } ?: emptyList()
             } catch (e: Exception) {
                 emptyList()

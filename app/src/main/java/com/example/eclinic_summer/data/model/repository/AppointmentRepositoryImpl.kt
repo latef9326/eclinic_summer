@@ -1,3 +1,4 @@
+// AppointmentRepositoryImpl.kt
 package com.example.eclinic_summer.data.model.repository
 
 import com.example.eclinic_summer.data.model.Appointment
@@ -36,7 +37,55 @@ class AppointmentRepositoryImpl @Inject constructor(
             }
     }
 
-    override suspend fun bookAppointment(appointment: Appointment): Result<Void?> {
+    override suspend fun getAllAppointments(): List<Appointment> {
+        return try {
+            val snapshot = appointmentsRef.get().await()
+            snapshot.documents.mapNotNull { it.toAppointment() }
+        } catch (e: Exception) {
+            println("Error getting all appointments: ${e.message}")
+            emptyList()
+        }
+    }
+
+    override suspend fun updateAppointmentStatus(appointmentId: String, status: String): Result<Unit> {
+        return try {
+            appointmentsRef.document(appointmentId)
+                .update("status", status)
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            println("Error updating appointment status: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getAppointmentsByDoctor(doctorId: String): List<Appointment> {
+        return try {
+            val snapshot = appointmentsRef
+                .whereEqualTo("doctorId", doctorId)
+                .get()
+                .await()
+            snapshot.documents.mapNotNull { it.toAppointment() }
+        } catch (e: Exception) {
+            println("Error getting appointments by doctor: ${e.message}")
+            emptyList()
+        }
+    }
+
+    override suspend fun getAppointmentsByPatient(patientId: String): List<Appointment> {
+        return try {
+            val snapshot = appointmentsRef
+                .whereEqualTo("patientId", patientId)
+                .get()
+                .await()
+            snapshot.documents.mapNotNull { it.toAppointment() }
+        } catch (e: Exception) {
+            println("Error getting appointments by patient: ${e.message}")
+            emptyList()
+        }
+    }
+
+    override suspend fun bookAppointment(appointment: Appointment): Result<Unit> {
         return try {
             val docId = if (appointment.appointmentId.isBlank()) {
                 appointmentsRef.document().id
@@ -48,7 +97,7 @@ class AppointmentRepositoryImpl @Inject constructor(
                 .set(appointment.copy(appointmentId = docId))
                 .await()
 
-            Result.success(null)
+            Result.success(Unit)
         } catch (e: Exception) {
             println("Error booking appointment: ${e.message}")
             Result.failure(e)
@@ -58,15 +107,24 @@ class AppointmentRepositoryImpl @Inject constructor(
     override suspend fun updateAppointmentNotes(
         appointmentId: String,
         notes: String
-    ): Result<Void?> {
+    ): Result<Unit> {
         return try {
             appointmentsRef.document(appointmentId)
                 .update("doctorNotes", notes)
                 .await()
-            Result.success(null)
+            Result.success(Unit)
         } catch (e: Exception) {
             println("Error updating notes: ${e.message}")
             Result.failure(e)
+        }
+    }
+    override suspend fun getAppointmentById(appointmentId: String): Appointment? {
+        return try {
+            val document = appointmentsRef.document(appointmentId).get().await()
+            document.toAppointment()
+        } catch (e: Exception) {
+            println("Error getting appointment: ${e.message}")
+            null
         }
     }
 
@@ -74,7 +132,7 @@ class AppointmentRepositoryImpl @Inject constructor(
         appointmentId: String,
         documentType: String,
         documentUrl: String
-    ): Result<Void?> {
+    ): Result<Unit> {
         return try {
             val fieldName = when (documentType) {
                 "prescription" -> "prescriptionUrl"
@@ -85,7 +143,7 @@ class AppointmentRepositoryImpl @Inject constructor(
             appointmentsRef.document(appointmentId)
                 .update(fieldName, documentUrl)
                 .await()
-            Result.success(null)
+            Result.success(Unit)
         } catch (e: Exception) {
             println("Error adding document: ${e.message}")
             Result.failure(e)
@@ -99,5 +157,7 @@ class AppointmentRepositoryImpl @Inject constructor(
             println("Error converting document ${this.id}: ${e.message}")
             null
         }
+
+
     }
 }

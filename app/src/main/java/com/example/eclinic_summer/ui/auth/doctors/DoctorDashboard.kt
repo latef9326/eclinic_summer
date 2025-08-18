@@ -41,6 +41,7 @@ fun DoctorDashboard(
                         text = "Welcome, Dr. ${currentUser?.fullName ?: ""}!",
                         style = MaterialTheme.typography.headlineLarge
                     )
+
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // 1) Zarządzanie harmonogramem (z przekazaniem doctorId)
@@ -71,7 +72,35 @@ fun DoctorDashboard(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // 3) Konsultacje online (placeholder)
+                    // W obu dashboardach zmień:
+                    Button(
+                        onClick = {
+                            currentUser?.uid?.let {
+                                navController.navigate("chat_list/$it") // POPRAWIONE: dodano argument
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("My Chats")
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // 4) Dokumenty medyczne
+                    Button(
+                        onClick = {
+                            currentUser?.uid?.let {
+                                navController.navigate("documents/$it")
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("My Documents")
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // 5) Konsultacje online (placeholder)
                     Button(
                         onClick = { /* TODO: Implement online consultations */ },
                         modifier = Modifier.fillMaxWidth()
