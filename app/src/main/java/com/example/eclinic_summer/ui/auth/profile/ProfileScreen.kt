@@ -1,3 +1,4 @@
+// ProfileScreen.kt
 package com.example.eclinic_summer.ui.auth.profile
 
 import androidx.compose.foundation.layout.*
@@ -23,19 +24,17 @@ fun ProfileScreen(
     val fullName by viewModel.fullName.collectAsState()
     val email by viewModel.email.collectAsState()
     val specialization by viewModel.specialization.collectAsState()
+    val phone by viewModel.phone.collectAsState()
+    val address by viewModel.address.collectAsState()
+    val dateOfBirth by viewModel.dateOfBirth.collectAsState()
+    val pesel by viewModel.pesel.collectAsState()
+    val licenseNumber by viewModel.licenseNumber.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
     val isSuccess by viewModel.isSuccess.collectAsState()
 
-    LaunchedEffect(userId) {
-        viewModel.loadUser(userId)
-    }
-
-    LaunchedEffect(isSuccess) {
-        if (isSuccess) {
-            navController.popBackStack()
-        }
-    }
+    LaunchedEffect(userId) { viewModel.loadUser(userId) }
+    LaunchedEffect(isSuccess) { if (isSuccess) navController.popBackStack() }
 
     Scaffold(
         topBar = {
@@ -86,7 +85,41 @@ fun ProfileScreen(
                         label = { Text("Specialization") },
                         modifier = Modifier.fillMaxWidth()
                     )
+                    OutlinedTextField(
+                        value = licenseNumber,
+                        onValueChange = viewModel::onLicenseNumberChange,
+                        label = { Text("License Number") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
+
+                OutlinedTextField(
+                    value = phone,
+                    onValueChange = viewModel::onPhoneChange,
+                    label = { Text("Phone") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = address,
+                    onValueChange = viewModel::onAddressChange,
+                    label = { Text("Address") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = dateOfBirth,
+                    onValueChange = viewModel::onDateOfBirthChange,
+                    label = { Text("Date of Birth") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = pesel,
+                    onValueChange = viewModel::onPeselChange,
+                    label = { Text("PESEL") },
+                    modifier = Modifier.fillMaxWidth()
+                )
 
                 if (error != null) {
                     Text(

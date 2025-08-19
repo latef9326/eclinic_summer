@@ -25,91 +25,92 @@ fun DoctorDashboard(
             TopAppBar(title = { Text("Doctor Dashboard") })
         },
         content = { padding ->
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Text(
+                    text = "Welcome, Dr. ${currentUser?.fullName ?: ""}!",
+                    style = MaterialTheme.typography.headlineLarge
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // 1) Zarządzanie harmonogramem
+                Button(
+                    onClick = {
+                        currentUser?.uid?.let { uid ->
+                            navController.navigate("schedule/$uid")
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = "Welcome, Dr. ${currentUser?.fullName ?: ""}!",
-                        style = MaterialTheme.typography.headlineLarge
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // 1) Zarządzanie harmonogramem (z przekazaniem doctorId)
-                    Button(
-                        onClick = {
-                            currentUser?.uid?.let { uid ->
-                                navController.navigate("schedule/$uid")
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Manage Schedule")
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // 2) Lista wizyt
-                    Button(
-                        onClick = {
-                            currentUser?.uid?.let { uid ->
-                                navController.navigate("appointments/$uid")
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("View Appointments")
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // W obu dashboardach zmień:
-                    Button(
-                        onClick = {
-                            currentUser?.uid?.let {
-                                navController.navigate("chat_list/$it") // POPRAWIONE: dodano argument
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("My Chats")
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // 4) Dokumenty medyczne
-                    Button(
-                        onClick = {
-                            currentUser?.uid?.let {
-                                navController.navigate("documents/$it")
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("My Documents")
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // 5) Konsultacje online (placeholder)
-                    Button(
-                        onClick = { /* TODO: Implement online consultations */ },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Online Consultations")
-                    }
+                    Text("Manage Schedule")
                 }
 
-                // Logout w prawym dolnym rogu
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // 2) Lista wizyt
+                Button(
+                    onClick = {
+                        currentUser?.uid?.let { uid ->
+                            navController.navigate("appointments/$uid")
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("View Appointments")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // 3) Czaty
+                Button(
+                    onClick = {
+                        currentUser?.uid?.let {
+                            navController.navigate("chat_list/$it")
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("My Chats")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // 4) Dokumenty medyczne
+                Button(
+                    onClick = {
+                        currentUser?.uid?.let {
+                            navController.navigate("documents/$it")
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("My Documents")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // DODANY PRZYCISK PROFILU - w odpowiednim miejscu
+                Button(
+                    onClick = {
+                        currentUser?.uid?.let {
+                            navController.navigate("profile/$it")
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("View/Edit My Profile")
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Logout na dole, ale w Column
                 Button(
                     onClick = {
                         authViewModel.logout()
@@ -117,9 +118,7 @@ fun DoctorDashboard(
                             popUpTo("doctor_dashboard") { inclusive = true }
                         }
                     },
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(16.dp)
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Logout")
                 }

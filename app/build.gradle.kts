@@ -25,7 +25,6 @@ android {
     }
 
     composeOptions {
-        // Keep compatible version (1.5.10 works with Kotlin 1.9.22)
         kotlinCompilerExtensionVersion = "1.5.10"
     }
 
@@ -58,7 +57,6 @@ dependencies {
 
     // Hilt
     implementation("com.google.dagger:hilt-android:2.48")
-    implementation(libs.androidx.media3.exoplayer)
     kapt("com.google.dagger:hilt-compiler:2.48")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
@@ -67,6 +65,7 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("com.google.firebase:firebase-messaging-ktx") // 🔔 FCM
 
     // Testing
     testImplementation("junit:junit:4.13.2")

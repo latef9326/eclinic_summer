@@ -22,7 +22,7 @@ interface UserRepository {
 
     suspend fun updateAvailability(
         userId: String,
-        oldSlot: Availability,
+        slotId: String,  // Zmienione z oldSlot na slotId
         newSlot: Availability
     ): Boolean
 }

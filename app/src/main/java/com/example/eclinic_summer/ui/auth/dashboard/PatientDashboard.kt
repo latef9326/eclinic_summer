@@ -39,90 +39,101 @@ fun PatientDashboard(
                 TopAppBar(title = { Text("Patient Dashboard") })
             },
             content = { padding ->
-                Box(
+                Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(padding)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "Welcome, ${currentUser?.fullName ?: "Patient"}!",
-                            style = MaterialTheme.typography.headlineLarge
-                        )
+                    Text(
+                        text = "Welcome, ${currentUser?.fullName ?: "Patient"}!",
+                        style = MaterialTheme.typography.headlineLarge
+                    )
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                        Button(
-                            onClick = {
-                                currentUser?.uid?.let { uid ->
-                                    navController.navigate("doctors/$uid") {
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                } ?: run {
-                                    // Jeśli UID jest nullem, wymuś ponowne pobranie danych
-                                    authViewModel.fetchUserData(
-                                        onError = {
-                                            navController.navigate("login") {
-                                                popUpTo(navController.graph.startDestinationId)
-                                                launchSingleTop = true
-                                            }
+                    Button(
+                        onClick = {
+                            currentUser?.uid?.let { uid ->
+                                navController.navigate("doctors/$uid") {
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            } ?: run {
+                                // Jeśli UID jest nullem, wymuś ponowne pobranie danych
+                                authViewModel.fetchUserData(
+                                    onError = {
+                                        navController.navigate("login") {
+                                            popUpTo(navController.graph.startDestinationId)
+                                            launchSingleTop = true
                                         }
-                                    )
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Book Appointment")
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Button(
-                            onClick = {
-                                currentUser?.uid?.let {
-                                    navController.navigate("medical_history/$it")
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("View Medical History")
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // W obu dashboardach zmień:
-                        Button(
-                            onClick = {
-                                currentUser?.uid?.let {
-                                    navController.navigate("chat_list/$it") // POPRAWIONE: dodano argument
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("My Chats")
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Button(
-                            onClick = {
-                                currentUser?.uid?.let {
-                                    navController.navigate("documents/$it")
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("My Documents")
-                        }
+                                    }
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Book Appointment")
                     }
 
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        onClick = {
+                            currentUser?.uid?.let {
+                                navController.navigate("medical_history/$it")
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("View Medical History")
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        onClick = {
+                            currentUser?.uid?.let {
+                                navController.navigate("chat_list/$it")
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("My Chats")
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        onClick = {
+                            currentUser?.uid?.let {
+                                navController.navigate("documents/$it")
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("My Documents")
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // DODANY PRZYCISK PROFILU - w odpowiednim miejscu
+                    Button(
+                        onClick = {
+                            currentUser?.uid?.let {
+                                navController.navigate("profile/$it")
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("View/Edit My Profile")
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    // Logout na dole, ale w Column
                     Button(
                         onClick = {
                             authViewModel.logout()
@@ -130,9 +141,7 @@ fun PatientDashboard(
                                 popUpTo("patient_dashboard") { inclusive = true }
                             }
                         },
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(16.dp)
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("Logout")
                     }

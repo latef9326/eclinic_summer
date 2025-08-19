@@ -1,8 +1,13 @@
 package com.example.eclinic_summer
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.compose.runtime.*
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
@@ -28,12 +33,58 @@ import com.example.eclinic_summer.ui.auth.doctors.DoctorDashboard
 import com.example.eclinic_summer.ui.auth.documents.DocumentsScreen
 import com.example.eclinic_summer.ui.auth.profile.ProfileScreen
 import com.example.eclinic_summer.viewmodel.AuthViewModel
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Sprawdź i poproś o uprawnienia do powiadomień (dla Android 13+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    0
+                )
+            }
+        }
+
+        // Pobierz token FCM dla tego urządzenia
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Timber.w("Fetching FCM registration token failed", task.exception)
+                return@addOnCompleteListener
+            }
+
+            val token = task.result
+            Timber.d("🔥 Current FCM Token: $token")
+
+            // Zapisz token w Firestore
+            val user = Firebase.auth.currentUser
+            user?.let {
+                Firebase.firestore.collection("users")
+                    .document(user.uid)
+                    .update("fcmToken", token)
+                    .addOnSuccessListener {
+                        Timber.d("FCM token saved to Firestore")
+                    }
+                    .addOnFailureListener { e ->
+                        Timber.e(e, "Error saving FCM token")
+                    }
+            }
+        }
+
         setContent {
             EClinicNavigation()
         }
@@ -118,7 +169,7 @@ fun EClinicNavigation() {
             )
         }
 
-        // ✅ Appointment Detail
+        // Appointment Detail
         composable(
             "appointment_detail/{appointmentId}",
             arguments = listOf(navArgument("appointmentId") { type = NavType.StringType })

@@ -7,6 +7,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import timber.log.Timber
 import javax.inject.Inject
 
 class UserRepositoryImpl @Inject constructor(
@@ -99,53 +100,86 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-    // Aktualizacja slotu (usuń stary, dodaj nowy)
+    // 🔹 Aktualizacja istniejącego slotu dostępności (poprawiona wersja)
     override suspend fun updateAvailability(
         userId: String,
-        oldSlot: Availability,
+        slotId: String,
         newSlot: Availability
     ): Boolean {
         return try {
-            firestore.collection("users")
-                .document(userId)
-                .update("availability", FieldValue.arrayRemove(oldSlot))
-                .await()
-            firestore.collection("users")
-                .document(userId)
-                .update("availability", FieldValue.arrayUnion(newSlot))
-                .await()
+            val userRef = firestore.collection("users").document(userId)
+
+            firestore.runTransaction { transaction ->
+                val snapshot = transaction.get(userRef)
+                val user = snapshot.toObject(User::class.java) ?: throw Exception("User not found")
+
+                val currentAvailability = user.availability?.toMutableList() ?: mutableListOf()
+
+                // DEBUG logi
+                Timber.d("Looking for slotId: $slotId")
+                Timber.d("Available slots: ${currentAvailability.map { it.id }}")
+
+                val index = currentAvailability.indexOfFirst { it.id == slotId }
+
+                if (index == -1) {
+                    Timber.e("Slot not found. Available IDs: ${currentAvailability.map { it.id }}")
+                    throw Exception("Availability slot not found")
+                }
+
+                currentAvailability[index] = newSlot
+                transaction.update(userRef, "availability", currentAvailability)
+            }.await()
+
             true
         } catch (e: Exception) {
-            Log.e("UserRepository", "Error updating availability: ${e.message}", e)
+            Timber.e(e, "Error updating availability for user: $userId, slot: $slotId")
             false
         }
     }
 
-    // 🔹 Poprawiona konwersja DocumentSnapshot do User
-    private fun DocumentSnapshot.toUser(): User {
-        return User(
-            uid = id,
-            email = getString("email") ?: "",
-            fullName = getString("fullName") ?: "",
-            role = getString("role") ?: "patient",
-            specialization = getString("specialization"),
-            availability = try {
-                val availabilityList = get("availability") as? List<*>
-                availabilityList?.mapNotNull { item ->
-                    when (item) {
-                        is Map<*, *> -> Availability(
-                            date = item["date"] as? String ?: "",
-                            dayOfWeek = item["dayOfWeek"] as? String ?: "",
-                            startTime = item["startTime"] as? String ?: "",
-                            endTime = item["endTime"] as? String ?: "",
-                            isBooked = item["isBooked"] as? Boolean ?: false
-                        )
-                        else -> null
-                    }
-                } ?: emptyList()
-            } catch (e: Exception) {
-                emptyList()
+    // 🔹 Konwersja DocumentSnapshot → User (uwzględnia Availability z ID)
+    private fun DocumentSnapshot.toUser(): User? {
+        return try {
+            val data = this.data ?: return null
+            User(
+                uid = this.id,
+                email = getString("email") ?: "",
+                fullName = getString("fullName") ?: "",
+                role = getString("role") ?: "patient",
+                phone = getString("phone"),
+                address = getString("address"),
+                dateOfBirth = getString("dateOfBirth"),
+                pesel = getString("pesel"),
+                medicalHistory = getString("medicalHistory"),
+                specialization = getString("specialization"),
+                licenseNumber = getString("licenseNumber"),
+                availability = convertToAvailabilityList(get("availability")),
+                fcmToken = getString("fcmToken"),
+                createdAt = getTimestamp("createdAt") ?: com.google.firebase.Timestamp.now(),
+                updatedAt = getTimestamp("updatedAt") ?: com.google.firebase.Timestamp.now()
+            )
+        } catch (e: Exception) {
+            Timber.e(e, "Error converting document to User")
+            null
+        }
+    }
+
+    private fun convertToAvailabilityList(availabilityData: Any?): List<Availability> {
+        return try {
+            val list = availabilityData as? List<Map<String, Any>> ?: emptyList()
+            list.map { map ->
+                Availability(
+                    id = (map["id"] as? String) ?: "",
+                    date = (map["date"] as? String) ?: "",
+                    dayOfWeek = (map["dayOfWeek"] as? String) ?: "",
+                    startTime = (map["startTime"] as? String) ?: "",
+                    endTime = (map["endTime"] as? String) ?: "",
+                    isBooked = (map["isBooked"] as? Boolean) ?: false
+                )
             }
-        )
+        } catch (e: Exception) {
+            Timber.e(e, "Error converting availability data")
+            emptyList()
+        }
     }
 }

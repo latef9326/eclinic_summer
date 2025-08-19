@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,15 +23,20 @@ class DoctorScheduleViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _error = MutableStateFlow<Throwable?>(null)
+    val error: StateFlow<Throwable?> = _error.asStateFlow()
+
     fun loadAvailability(doctorId: String) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                userRepository.getUser(doctorId)?.availability?.let {
-                    _availability.value = it
-                } ?: run {
-                    _availability.value = emptyList()
-                }
+                val user = userRepository.getUser(doctorId)
+                _availability.value = user?.availability ?: emptyList()
+                _error.value = null
+            } catch (t: Throwable) {
+                _availability.value = emptyList()
+                _error.value = t
+                Timber.e(t, "Failed to load availability for doctor: $doctorId")
             } finally {
                 _isLoading.value = false
             }
@@ -44,6 +50,9 @@ class DoctorScheduleViewModel @Inject constructor(
                 if (userRepository.updateUserAvailability(doctorId, newSlot)) {
                     _availability.value = _availability.value + newSlot
                 }
+            } catch (t: Throwable) {
+                _error.value = t
+                Timber.e(t, "Failed to add new slot for doctor: $doctorId")
             } finally {
                 _isLoading.value = false
             }
@@ -55,8 +64,11 @@ class DoctorScheduleViewModel @Inject constructor(
             _isLoading.value = true
             try {
                 if (userRepository.removeAvailability(doctorId, slot)) {
-                    _availability.value = _availability.value.filter { it != slot }
+                    _availability.value = _availability.value.filter { it.id != slot.id }
                 }
+            } catch (t: Throwable) {
+                _error.value = t
+                Timber.e(t, "Failed to delete slot ${slot.id} for doctor: $doctorId")
             } finally {
                 _isLoading.value = false
             }
@@ -67,11 +79,17 @@ class DoctorScheduleViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                if (userRepository.updateAvailability(doctorId, oldSlot, newSlot)) {
-                    _availability.value = _availability.value.map {
-                        if (it == oldSlot) newSlot else it
+                val slotId = oldSlot.id
+                require(slotId.isNotBlank()) { "Slot id cannot be blank" }
+
+                if (userRepository.updateAvailability(doctorId, slotId, newSlot)) {
+                    _availability.value = _availability.value.map { current ->
+                        if (current.id == slotId) newSlot else current
                     }
                 }
+            } catch (t: Throwable) {
+                _error.value = t
+                Timber.e(t, "Failed to update slot ${oldSlot.id} for doctor: $doctorId")
             } finally {
                 _isLoading.value = false
             }

@@ -1,9 +1,11 @@
+// ProfileViewModel.kt
 package com.example.eclinic_summer.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.eclinic_summer.data.model.User
 import com.example.eclinic_summer.domain.domainrepository.UserRepository
+import com.google.firebase.Timestamp
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,6 +29,21 @@ class ProfileViewModel @Inject constructor(
     private val _specialization = MutableStateFlow("")
     val specialization: StateFlow<String> = _specialization.asStateFlow()
 
+    private val _phone = MutableStateFlow("")
+    val phone: StateFlow<String> = _phone.asStateFlow()
+
+    private val _address = MutableStateFlow("")
+    val address: StateFlow<String> = _address.asStateFlow()
+
+    private val _dateOfBirth = MutableStateFlow("")
+    val dateOfBirth: StateFlow<String> = _dateOfBirth.asStateFlow()
+
+    private val _pesel = MutableStateFlow("")
+    val pesel: StateFlow<String> = _pesel.asStateFlow()
+
+    private val _licenseNumber = MutableStateFlow("")
+    val licenseNumber: StateFlow<String> = _licenseNumber.asStateFlow()
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -45,6 +62,11 @@ class ProfileViewModel @Inject constructor(
                     _fullName.value = it.fullName
                     _email.value = it.email
                     _specialization.value = it.specialization ?: ""
+                    _phone.value = it.phone ?: ""
+                    _address.value = it.address ?: ""
+                    _dateOfBirth.value = it.dateOfBirth ?: ""
+                    _pesel.value = it.pesel ?: ""
+                    _licenseNumber.value = it.licenseNumber ?: ""
                 }
                 _error.value = null
             } catch (e: Exception) {
@@ -55,17 +77,14 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun onFullNameChange(value: String) {
-        _fullName.value = value
-    }
-
-    fun onEmailChange(value: String) {
-        _email.value = value
-    }
-
-    fun onSpecializationChange(value: String) {
-        _specialization.value = value
-    }
+    fun onFullNameChange(value: String) { _fullName.value = value }
+    fun onEmailChange(value: String) { _email.value = value }
+    fun onSpecializationChange(value: String) { _specialization.value = value }
+    fun onPhoneChange(value: String) { _phone.value = value }
+    fun onAddressChange(value: String) { _address.value = value }
+    fun onDateOfBirthChange(value: String) { _dateOfBirth.value = value }
+    fun onPeselChange(value: String) { _pesel.value = value }
+    fun onLicenseNumberChange(value: String) { _licenseNumber.value = value }
 
     fun updateUser() {
         val currentUser = _user.value ?: return
@@ -75,9 +94,14 @@ class ProfileViewModel @Inject constructor(
                 val updatedUser = currentUser.copy(
                     fullName = fullName.value,
                     email = email.value,
-                    specialization = specialization.value.ifEmpty { null }
+                    phone = phone.value.ifEmpty { null },
+                    address = address.value.ifEmpty { null },
+                    dateOfBirth = dateOfBirth.value.ifEmpty { null },
+                    pesel = pesel.value.ifEmpty { null },
+                    specialization = specialization.value.ifEmpty { null },
+                    licenseNumber = licenseNumber.value.ifEmpty { null },
+                    updatedAt = Timestamp.now()
                 )
-
                 userRepository.updateUser(updatedUser)
                 _isSuccess.value = true
                 _error.value = null
