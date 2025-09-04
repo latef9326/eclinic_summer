@@ -1,9 +1,9 @@
 package com.example.eclinic_summer.data.model.repository
 
+import android.content.Context
 import android.net.Uri
 import com.example.eclinic_summer.data.model.Conversation
 import com.example.eclinic_summer.data.model.Message
-import com.example.eclinic_summer.data.model.User
 import com.example.eclinic_summer.domain.domainrepository.ChatRepository
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
@@ -13,6 +13,7 @@ import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
+import java.io.File
 import javax.inject.Inject
 
 class ChatRepositoryImpl @Inject constructor(
@@ -54,7 +55,17 @@ class ChatRepositoryImpl @Inject constructor(
     }
 
     override suspend fun markMessagesAsRead(conversationId: String, userId: String) {
-        // TODO: Implementacja oznaczania wiadomości jako przeczytane
+        // Mark messages as read for this user
+        val unreadMessages = messagesRef
+            .whereEqualTo("conversationId", conversationId)
+            .whereEqualTo("receiverId", userId)
+            .whereEqualTo("read", false)
+            .get()
+            .await()
+
+        for (document in unreadMessages.documents) {
+            document.reference.update("read", true).await()
+        }
     }
 
     override suspend fun uploadFile(fileUri: Uri, fileName: String): String {
@@ -63,7 +74,18 @@ class ChatRepositoryImpl @Inject constructor(
         return fileRef.downloadUrl.await().toString()
     }
 
-    // 🔹 Tworzenie konwersacji z unikaniem duplikatów
+    override suspend fun downloadFile(context: Context, fileUrl: String) {
+        try {
+            val fileRef = storage.getReferenceFromUrl(fileUrl)
+            val fileName = fileUrl.substringAfterLast("/")
+            val localFile = File(context.getExternalFilesDir(null), fileName)
+            fileRef.getFile(localFile).await()
+            // File downloaded successfully
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+
     override suspend fun createConversation(patientId: String, doctorId: String): String {
         // Najpierw sprawdź czy konwersacja już istnieje
         findExistingConversation(patientId, doctorId)?.let { return it }
@@ -96,12 +118,11 @@ class ChatRepositoryImpl @Inject constructor(
         return conversationsRef.add(conversation).await().id
     }
 
-    // 🔹 Znajdowanie istniejącej konwersacji (limit i optymalizacja)
     private suspend fun findExistingConversation(patientId: String, doctorId: String): String? {
         val querySnapshot = conversationsRef
             .whereArrayContains("participants", patientId)
             .orderBy("lastMessageTimestamp", Query.Direction.DESCENDING)
-            .limit(50) // ograniczenie liczby dokumentów
+            .limit(50)
             .get()
             .await()
 

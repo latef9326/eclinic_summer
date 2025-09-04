@@ -1,11 +1,17 @@
 package com.example.eclinic_summer.ui.auth.chat
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,7 +21,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.eclinic_summer.data.model.Message
+import com.example.eclinic_summer.ui.auth.components.getFileNameFromUri
+
 import com.example.eclinic_summer.viewmodel.ChatViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -31,8 +41,18 @@ fun ChatScreen(
     var messageText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
     val context = LocalContext.current
-    // Pobierz currentUserId z ViewModel (musi być zaimplementowane)
     val currentUserId by remember { derivedStateOf { viewModel.getCurrentUserId() } }
+
+    // File picker launcher
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri: Uri? ->
+            uri?.let {
+                val fileName = context.contentResolver.getFileNameFromUri(uri)
+                viewModel.sendFileMessage(conversationId, uri, fileName)
+            }
+        }
+    )
 
     LaunchedEffect(conversationId) {
         viewModel.loadMessages(conversationId)
@@ -63,6 +83,17 @@ fun ChatScreen(
                     .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Attachment button
+                IconButton(
+                    onClick = {
+                        filePickerLauncher.launch("*/*")
+                    }
+                ) {
+                    Icon(Icons.Filled.AttachFile, "Attach file")
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
                 OutlinedTextField(
                     value = messageText,
                     onValueChange = { messageText = it },
@@ -98,7 +129,11 @@ fun ChatScreen(
             items(messages) { message ->
                 MessageBubble(
                     message = message,
-                    isCurrentUser = message.senderId == currentUserId // POPRAWIONE
+                    isCurrentUser = message.senderId == currentUserId,
+                    onFileClick = { fileUrl ->
+                        // Handle file click (open/download)
+                        viewModel.downloadFile(fileUrl)
+                    }
                 )
             }
         }
@@ -108,7 +143,8 @@ fun ChatScreen(
 @Composable
 fun MessageBubble(
     message: Message,
-    isCurrentUser: Boolean
+    isCurrentUser: Boolean,
+    onFileClick: (String) -> Unit
 ) {
     val bubbleColor = if (isCurrentUser) {
         MaterialTheme.colorScheme.primaryContainer
@@ -135,10 +171,34 @@ fun MessageBubble(
                 }
 
                 if (message.fileUrl != null) {
-                    Text(
-                        text = "📎 ${message.fileName ?: "File"}",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    when (message.type) {
+                        "image" -> {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(message.fileUrl)
+                                    .crossfade(true)
+                                    .build(),
+                                contentDescription = "Image",
+                                modifier = Modifier
+                                    .size(200.dp)
+                                    .clickable { onFileClick(message.fileUrl) }
+                            )
+                        }
+                        "pdf" -> {
+                            FileMessageItem(
+                                fileName = message.fileName ?: "Document",
+                                fileType = "PDF",
+                                onClick = { onFileClick(message.fileUrl) }
+                            )
+                        }
+                        else -> {
+                            FileMessageItem(
+                                fileName = message.fileName ?: "File",
+                                fileType = "File",
+                                onClick = { onFileClick(message.fileUrl) }
+                            )
+                        }
+                    }
                 }
 
                 Text(
@@ -146,6 +206,38 @@ fun MessageBubble(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun FileMessageItem(
+    fileName: String,
+    fileType: String,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Row(
+            modifier = Modifier.padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = when (fileType) {
+                    "PDF" -> Icons.Filled.PictureAsPdf
+                    else -> Icons.Filled.AttachFile
+                },
+                contentDescription = fileType
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Column {
+                Text(text = fileName, style = MaterialTheme.typography.bodyMedium)
+                Text(text = fileType, style = MaterialTheme.typography.bodySmall)
             }
         }
     }

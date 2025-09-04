@@ -1,5 +1,6 @@
 package com.example.eclinic_summer.viewmodel
 
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,6 +9,7 @@ import com.example.eclinic_summer.data.model.Message
 import com.example.eclinic_summer.domain.domainrepository.AuthRepository
 import com.example.eclinic_summer.domain.domainrepository.ChatRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -17,7 +19,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ChatViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _conversations = MutableStateFlow<List<Conversation>>(emptyList())
@@ -30,12 +33,6 @@ class ChatViewModel @Inject constructor(
 
     // Pobranie ID aktualnego użytkownika
     fun getCurrentUserId(): String = authRepository.getCurrentUserId() ?: ""
-
-    // Pobranie ID konwersacji po pacjencie i lekarzu
-    fun getConversationId(patientId: String, doctorId: String): String? =
-        _conversations.value.firstOrNull {
-            it.patientId == patientId && it.doctorId == doctorId
-        }?.conversationId
 
     fun loadConversations(userId: String) {
         viewModelScope.launch {
@@ -80,28 +77,41 @@ class ChatViewModel @Inject constructor(
 
     fun sendFileMessage(conversationId: String, fileUri: Uri, fileName: String) {
         viewModelScope.launch {
-            val receiverId = getReceiverId(conversationId)
-            val fileUrl = chatRepository.uploadFile(fileUri, fileName)
+            try {
+                val receiverId = getReceiverId(conversationId)
+                val fileUrl = chatRepository.uploadFile(fileUri, fileName)
 
-            val message = Message(
-                conversationId = conversationId,
-                senderId = getCurrentUserId(),
-                receiverId = receiverId,
-                fileUrl = fileUrl,
-                fileName = fileName,
-                type = getFileType(fileName)
-            )
-            chatRepository.sendMessage(message)
+                val message = Message(
+                    conversationId = conversationId,
+                    senderId = getCurrentUserId(),
+                    receiverId = receiverId,
+                    fileUrl = fileUrl,
+                    fileName = fileName,
+                    type = getFileType(fileName)
+                )
+                chatRepository.sendMessage(message)
+            } catch (e: Exception) {
+                Timber.e(e, "Error sending file message")
+            }
+        }
+    }
+
+    fun downloadFile(fileUrl: String) {
+        viewModelScope.launch {
+            try {
+                chatRepository.downloadFile(context, fileUrl)
+            } catch (e: Exception) {
+                Timber.e(e, "Error downloading file")
+            }
         }
     }
 
     fun markMessagesAsRead(conversationId: String) {
         viewModelScope.launch {
-            // TODO: implementacja w repozytorium
+            chatRepository.markMessagesAsRead(conversationId, getCurrentUserId())
         }
     }
 
-    // 🔹 Prywatne funkcje pomocnicze
     private fun getReceiverId(conversationId: String): String {
         val currentUserId = getCurrentUserId()
         val conversation = currentConversation ?: return ""

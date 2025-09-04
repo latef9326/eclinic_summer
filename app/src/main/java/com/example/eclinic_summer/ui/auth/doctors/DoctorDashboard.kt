@@ -82,17 +82,7 @@ fun DoctorDashboard(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 4) Dokumenty medyczne
-                Button(
-                    onClick = {
-                        currentUser?.uid?.let {
-                            navController.navigate("documents/$it")
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("My Documents")
-                }
+
 
                 Spacer(modifier = Modifier.height(16.dp))
 

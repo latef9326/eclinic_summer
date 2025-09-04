@@ -14,9 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.eclinic_summer.data.model.repository.Availability
-import com.example.eclinic_summer.ui.auth.components.AppointmentCard
 import com.example.eclinic_summer.viewmodel.PatientAppointmentViewModel
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,7 +23,6 @@ fun BookAppointmentScreen(
     doctorId: String,
     viewModel: PatientAppointmentViewModel = hiltViewModel()
 ) {
-    // Używamy TYLKO availability, nie availabilityState
     val availability by viewModel.availability.collectAsState()
     val bookingStatus by viewModel.bookingStatus.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -69,9 +66,11 @@ fun BookAppointmentScreen(
             )
         }
     ) { padding ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(padding)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
             if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else {
@@ -96,14 +95,10 @@ fun BookAppointmentScreen(
                     } else {
                         LazyColumn(modifier = Modifier.weight(1f)) {
                             items(availability) { slot ->
-                                // Sprawdź czy slot nie jest już zarezerwowany
-                                val isAlreadyBooked = bookingStatus?.isSuccess == true &&
-                                        viewModel.isSlotBooked(slot.id)
-
                                 AvailabilitySlotItem(
-                                    slot = if (isAlreadyBooked) slot.copy(isBooked = true) else slot,
+                                    slot = slot,
                                     onBook = {
-                                        if (!slot.isBooked && !isAlreadyBooked) {
+                                        if (slot.getStatus() == "available") {
                                             viewModel.book(slot)
                                         }
                                     }
@@ -139,20 +134,55 @@ fun AvailabilitySlotItem(
     slot: Availability,
     onBook: () -> Unit
 ) {
+    val slotStatus = try {
+        slot.getStatus()
+    } catch (e: Exception) {
+        "available" // Domyślnie dostępny w przypadku błędu
+    }
+    val (statusText, statusColor, buttonText, enabled) = when (slotStatus) {
+        "completed" -> listOf(
+            "✅ Appointment completed",
+            MaterialTheme.colorScheme.primary,
+            "Completed",
+            false
+        )
+        "expired" -> listOf(
+            "❌ Appointment expired",
+            MaterialTheme.colorScheme.error,
+            "Expired",
+            false
+        )
+        "scheduled" -> listOf(
+            "✅ Scheduled",
+            MaterialTheme.colorScheme.primary,
+            "Booked",
+            false
+        )
+        else -> listOf(
+            "Available",
+            MaterialTheme.colorScheme.onSurface,
+            "Book Now",
+            true
+        )
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (slot.isBooked)
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            else
-                MaterialTheme.colorScheme.surface
+            containerColor = when (slotStatus) {
+                "expired" -> MaterialTheme.colorScheme.errorContainer
+                "completed" -> MaterialTheme.colorScheme.primaryContainer
+                "scheduled" -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                else -> MaterialTheme.colorScheme.surface
+            }
         ),
-        border = if (slot.isBooked)
-            BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
-        else
-            null
+        border = when (slotStatus) {
+            "scheduled", "completed" -> BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
+            "expired" -> BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+            else -> null
+        }
     ) {
         Row(
             modifier = Modifier
@@ -165,31 +195,31 @@ fun AvailabilitySlotItem(
                 Text(
                     text = "${slot.date} • ${slot.startTime} - ${slot.endTime}",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = if (slot.isBooked)
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    else
-                        MaterialTheme.colorScheme.onSurface
+                    color = when (slotStatus) {
+                        "expired" -> MaterialTheme.colorScheme.onErrorContainer
+                        "completed" -> MaterialTheme.colorScheme.onPrimaryContainer
+                        "scheduled" -> MaterialTheme.colorScheme.onSurfaceVariant
+                        else -> MaterialTheme.colorScheme.onSurface
+                    }
                 )
-                if (slot.isBooked) {
-                    Text(
-                        text = "✅ Scheduled",
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
+                Text(
+                    text = statusText.toString(),
+                    color = statusColor as androidx.compose.ui.graphics.Color,
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
 
             Button(
                 onClick = onBook,
-                enabled = !slot.isBooked,
+                enabled = enabled as Boolean,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (slot.isBooked)
+                    containerColor = if (!(enabled as Boolean))
                         MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
                     else
                         MaterialTheme.colorScheme.primary
                 )
             ) {
-                Text(if (slot.isBooked) "Booked" else "Book Now")
+                Text(buttonText.toString())
             }
         }
     }

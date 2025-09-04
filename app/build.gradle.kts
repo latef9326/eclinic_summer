@@ -39,6 +39,7 @@ android {
 }
 
 dependencies {
+    implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("com.jakewharton.timber:timber:5.0.1")
     implementation("com.google.android.material:material:1.11.0")
     implementation("androidx.core:core-ktx:1.12.0")
@@ -54,6 +55,7 @@ dependencies {
     implementation("androidx.compose.material3:material3:1.2.0")
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.compose.runtime:runtime-livedata:1.6.6")
+    implementation("androidx.compose.material:material-icons-extended:1.6.0")
 
     // Hilt
     implementation("com.google.dagger:hilt-android:2.48")

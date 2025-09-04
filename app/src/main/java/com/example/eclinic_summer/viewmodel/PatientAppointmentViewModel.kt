@@ -67,6 +67,12 @@ class PatientAppointmentViewModel @Inject constructor(
             return
         }
 
+        // Sprawdź czy slot jest dostępny (nie wygasły)
+        if (slot.getStatus() != "available") {
+            _bookingStatus.value = Result.failure(Exception("This time slot is no longer available"))
+            return
+        }
+
         viewModelScope.launch {
             _isLoading.value = true
             try {
@@ -84,7 +90,7 @@ class PatientAppointmentViewModel @Inject constructor(
                     status = "scheduled"
                 )
 
-                // 3. Zaktualizuj availability doktora – używamy slotId + updatedSlot
+                // 3. Zaktualizuj availability doktora
                 val updatedSlot = slot.copy(isBooked = true)
                 val updateSuccess = userRepository.updateAvailability(
                     doctorId,
@@ -110,10 +116,6 @@ class PatientAppointmentViewModel @Inject constructor(
                 _isLoading.value = false
             }
         }
-    }
-
-    fun isSlotBooked(slotId: String): Boolean {
-        return _availability.value.any { it.id == slotId && it.isBooked }
     }
 
     fun resetErrors() {
