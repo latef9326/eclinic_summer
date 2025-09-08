@@ -13,6 +13,9 @@ import androidx.navigation.NavController
 import com.example.eclinic_summer.data.model.Appointment
 import com.example.eclinic_summer.viewmodel.DoctorAppointmentsViewModel
 
+/**
+ * Screen showing a list of doctor's appointments.
+ */
 @Composable
 fun DoctorAppointmentsScreen(
     navController: NavController,
@@ -30,7 +33,6 @@ fun DoctorAppointmentsScreen(
         }
         error != null -> {
             ErrorMessage(error!!) {
-                // Retry ładowanie z ponownym wywołaniem loadAppointments
                 viewModel.retryLoadAppointments()
             }
         }
@@ -55,6 +57,9 @@ fun DoctorAppointmentsScreen(
     }
 }
 
+/**
+ * Composable for a single appointment item.
+ */
 @Composable
 private fun AppointmentItem(appointment: Appointment) {
     Card(
@@ -84,6 +89,9 @@ private fun AppointmentItem(appointment: Appointment) {
     }
 }
 
+/**
+ * Composable showing an error message with retry button.
+ */
 @Composable
 fun ErrorMessage(message: String, onRetry: () -> Unit) {
     Column(
@@ -99,6 +107,9 @@ fun ErrorMessage(message: String, onRetry: () -> Unit) {
     }
 }
 
+/**
+ * Composable showing a message when there are no appointments.
+ */
 @Composable
 fun EmptyAppointmentsMessage() {
     Box(

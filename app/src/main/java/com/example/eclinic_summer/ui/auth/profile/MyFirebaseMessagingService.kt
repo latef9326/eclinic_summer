@@ -20,14 +20,25 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import timber.log.Timber
 
+/**
+ * Firebase Messaging Service handling push notifications.
+ *
+ * Saves FCM token to Firestore and displays notifications for incoming messages.
+ */
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
+    /**
+     * Called when a new FCM token is generated.
+     */
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Timber.d("🔥 New FCM Token: $token")
         saveTokenToFirestore(token)
     }
 
+    /**
+     * Saves the FCM token to Firestore under the current user's document.
+     */
     private fun saveTokenToFirestore(token: String) {
         val user = Firebase.auth.currentUser
         user?.let {
@@ -43,6 +54,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
+    /**
+     * Handles incoming FCM messages.
+     */
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
@@ -52,8 +66,10 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         showNotification(title, body)
     }
 
+    /**
+     * Shows a notification with given title and message.
+     */
     private fun showNotification(title: String, message: String) {
-        // ✅ Sprawdzenie uprawnień dla Android 13+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
                     this,
@@ -89,6 +105,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
+    /**
+     * Creates a notification channel for Android O+ devices.
+     */
     private fun createNotificationChannel(channelId: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(

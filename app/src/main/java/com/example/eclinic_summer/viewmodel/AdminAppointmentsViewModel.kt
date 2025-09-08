@@ -11,6 +11,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel for admin to manage all appointments.
+ * Handles loading appointments and cancelling them.
+ */
 @HiltViewModel
 class AdminAppointmentsViewModel @Inject constructor(
     private val appointmentRepository: AppointmentRepository
@@ -25,6 +29,7 @@ class AdminAppointmentsViewModel @Inject constructor(
     private val _error = MutableStateFlow<Throwable?>(null)
     val error: StateFlow<Throwable?> = _error.asStateFlow()
 
+    /** Loads all appointments from repository */
     fun loadAllAppointments() {
         viewModelScope.launch {
             _isLoading.value = true
@@ -39,11 +44,12 @@ class AdminAppointmentsViewModel @Inject constructor(
         }
     }
 
+    /** Cancels an appointment and refreshes the list */
     fun cancelAppointment(appointmentId: String) {
         viewModelScope.launch {
             try {
                 appointmentRepository.updateAppointmentStatus(appointmentId, "cancelled")
-                loadAllAppointments() // Refresh the list
+                loadAllAppointments()
             } catch (e: Exception) {
                 _error.value = e
             }

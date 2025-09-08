@@ -11,16 +11,24 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel responsible for fetching and managing the list of doctors.
+ * Provides states for loading, error handling, and the list of doctors.
+ */
 @HiltViewModel
 class DoctorListViewModel @Inject constructor(
     private val userRepository: UserRepository
 ) : ViewModel() {
+
+    /** List of doctors. */
     private val _doctors = MutableStateFlow<List<User>>(emptyList())
     val doctors: StateFlow<List<User>> = _doctors.asStateFlow()
 
+    /** Indicates whether the doctors list is being loaded. */
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    /** Holds any error that occurs during loading. */
     private val _error = MutableStateFlow<Throwable?>(null)
     val error: StateFlow<Throwable?> = _error.asStateFlow()
 
@@ -28,12 +36,12 @@ class DoctorListViewModel @Inject constructor(
         loadDoctors()
     }
 
+    /** Loads doctors from the repository. */
     private fun loadDoctors() {
         viewModelScope.launch {
+            _isLoading.value = true
             try {
                 println("DEBUG: [DoctorListVM] Fetching doctors...")
-                _isLoading.value = true
-
                 val doctorsList = userRepository.getUsersByRole("doctor")
                 println("DEBUG: [DoctorListVM] Found ${doctorsList.size} doctors")
 

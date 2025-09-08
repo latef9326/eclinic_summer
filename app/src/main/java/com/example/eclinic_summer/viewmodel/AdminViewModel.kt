@@ -11,10 +11,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel for admin panel.
+ * Manages doctors and patients: loading lists, deleting users.
+ */
 @HiltViewModel
 class AdminViewModel @Inject constructor(
     private val userRepository: UserRepository
 ) : ViewModel() {
+
     private val _doctors = MutableStateFlow<List<User>>(emptyList())
     val doctors: StateFlow<List<User>> = _doctors.asStateFlow()
 
@@ -31,6 +36,7 @@ class AdminViewModel @Inject constructor(
         loadUsers()
     }
 
+    /** Loads doctors and patients from repository */
     private fun loadUsers() {
         viewModelScope.launch {
             _isLoading.value = true
@@ -46,11 +52,12 @@ class AdminViewModel @Inject constructor(
         }
     }
 
+    /** Deletes a user by UID and refreshes the lists */
     fun deleteUser(uid: String) {
         viewModelScope.launch {
             try {
                 userRepository.deleteUser(uid)
-                loadUsers() // Refresh the list after deletion
+                loadUsers()
             } catch (e: Exception) {
                 _error.value = e
             }

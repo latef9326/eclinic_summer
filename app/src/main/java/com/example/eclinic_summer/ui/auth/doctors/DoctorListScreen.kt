@@ -22,6 +22,9 @@ import androidx.navigation.NavController
 import com.example.eclinic_summer.data.model.User
 import com.example.eclinic_summer.viewmodel.DoctorListViewModel
 
+/**
+ * Screen displaying a list of doctors for a patient to choose from.
+ */
 @Composable
 fun DoctorListScreen(
     navController: NavController,
@@ -50,7 +53,6 @@ fun DoctorListScreen(
                 DoctorCard(
                     doctor = doctor,
                     onClick = {
-                        // Używamy doctor.uid
                         navController.navigate("book_appointment/${doctor.uid}")
                     }
                 )
@@ -59,6 +61,9 @@ fun DoctorListScreen(
     }
 }
 
+/**
+ * Composable showing a single doctor card.
+ */
 @Composable
 fun DoctorCard(
     doctor: User,

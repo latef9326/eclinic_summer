@@ -10,12 +10,27 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.eclinic_summer.viewmodel.AddDoctorViewModel
 
+/**
+ * A screen that allows administrators to add a new doctor to the system.
+ *
+ * This screen is responsible for collecting doctor details (full name, email,
+ * password, and specialization) through input fields. It integrates with
+ * [AddDoctorViewModel] to manage UI state and handle the doctor creation process.
+ *
+ * Once the operation is successful, it automatically navigates back to the
+ * previous screen using [NavController.popBackStack].
+ *
+ * @param navController The navigation controller used to navigate between screens.
+ * @param viewModel The [AddDoctorViewModel] instance injected via Hilt. It provides
+ * the UI state and business logic for adding a doctor.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddDoctorScreen(
     navController: NavController,
     viewModel: AddDoctorViewModel = hiltViewModel()
 ) {
+    // Collect UI state from the ViewModel
     val fullName by viewModel.fullName.collectAsState()
     val email by viewModel.email.collectAsState()
     val password by viewModel.password.collectAsState()
@@ -24,6 +39,7 @@ fun AddDoctorScreen(
     val error by viewModel.error.collectAsState()
     val isSuccess by viewModel.isSuccess.collectAsState()
 
+    // Automatically navigate back once doctor creation is successful
     LaunchedEffect(isSuccess) {
         if (isSuccess) {
             navController.popBackStack()
@@ -42,6 +58,7 @@ fun AddDoctorScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            /** Input field for doctor's full name */
             OutlinedTextField(
                 value = fullName,
                 onValueChange = viewModel::onFullNameChange,
@@ -49,6 +66,7 @@ fun AddDoctorScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            /** Input field for doctor's email address */
             OutlinedTextField(
                 value = email,
                 onValueChange = viewModel::onEmailChange,
@@ -56,6 +74,7 @@ fun AddDoctorScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            /** Input field for doctor's password */
             OutlinedTextField(
                 value = password,
                 onValueChange = viewModel::onPasswordChange,
@@ -63,6 +82,7 @@ fun AddDoctorScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            /** Input field for doctor's specialization */
             OutlinedTextField(
                 value = specialization,
                 onValueChange = viewModel::onSpecializationChange,
@@ -70,6 +90,7 @@ fun AddDoctorScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            /** Display error message if doctor creation fails */
             if (error != null) {
                 Text(
                     text = "Error: ${error?.message}",
@@ -77,6 +98,7 @@ fun AddDoctorScreen(
                 )
             }
 
+            /** Button to trigger doctor creation */
             Button(
                 onClick = { viewModel.addDoctor() },
                 modifier = Modifier.align(Alignment.End),

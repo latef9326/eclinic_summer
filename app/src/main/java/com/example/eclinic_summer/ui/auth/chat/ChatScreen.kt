@@ -25,11 +25,21 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.eclinic_summer.data.model.Message
 import com.example.eclinic_summer.ui.auth.components.getFileNameFromUri
-
 import com.example.eclinic_summer.viewmodel.ChatViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * Chat screen composable that displays a conversation.
+ *
+ * It supports sending text messages, attaching files (images, PDFs, etc.),
+ * and automatically scrolling to the latest message. It also loads messages
+ * for a given conversation and marks them as read.
+ *
+ * @param navController Navigation controller for handling navigation.
+ * @param conversationId The unique ID of the conversation being displayed.
+ * @param viewModel ViewModel that handles chat data and message operations.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
@@ -43,7 +53,7 @@ fun ChatScreen(
     val context = LocalContext.current
     val currentUserId by remember { derivedStateOf { viewModel.getCurrentUserId() } }
 
-    // File picker launcher
+    // File picker launcher to select and send files
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri: Uri? ->
@@ -140,6 +150,15 @@ fun ChatScreen(
     }
 }
 
+/**
+ * A composable that renders a single chat message bubble.
+ *
+ * It supports rendering text, images, PDFs, and generic file attachments.
+ *
+ * @param message The message to display.
+ * @param isCurrentUser Indicates if the message was sent by the current user.
+ * @param onFileClick Callback triggered when the user taps on a file attachment.
+ */
 @Composable
 fun MessageBubble(
     message: Message,
@@ -211,6 +230,16 @@ fun MessageBubble(
     }
 }
 
+/**
+ * A composable representing a file attachment message.
+ *
+ * Displays the file's name, type, and an icon representing its format.
+ * Supports PDF files and generic file attachments.
+ *
+ * @param fileName The displayed name of the file.
+ * @param fileType The type of the file (e.g., "PDF", "File").
+ * @param onClick Callback triggered when the user taps on the file item.
+ */
 @Composable
 fun FileMessageItem(
     fileName: String,
@@ -243,7 +272,14 @@ fun FileMessageItem(
     }
 }
 
-// Extension function to format date and time
+/**
+ * Extension function for formatting a [Date] object into
+ * a human-readable string with date and time.
+ *
+ * Example format: "06 Sep 2025, 14:45"
+ *
+ * @return A formatted date-time string.
+ */
 fun Date.formatAsDateTime(): String {
     val formatter = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
     return formatter.format(this)

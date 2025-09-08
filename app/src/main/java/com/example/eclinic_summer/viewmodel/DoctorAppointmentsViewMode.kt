@@ -13,22 +13,29 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel responsible for managing a doctor's appointments.
+ * Provides functionality to load appointments and handle loading/errors.
+ */
 @HiltViewModel
 class DoctorAppointmentsViewModel @Inject constructor(
     private val appointmentRepository: AppointmentRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
+    /** List of appointments for the doctor. */
     private val _appointments = MutableStateFlow<List<Appointment>>(emptyList())
     val appointments: StateFlow<List<Appointment>> = _appointments.asStateFlow()
 
+    /** Indicates whether the appointments are being loaded. */
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    // Dodaj StateFlow dla błędów
+    /** Holds any error messages related to loading appointments. */
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    /** The UID of the doctor whose appointments are loaded. */
     private var doctorId: String? = null
 
     init {
@@ -36,11 +43,12 @@ class DoctorAppointmentsViewModel @Inject constructor(
         loadAppointments()
     }
 
-    // Funkcja do ponownego ładowania danych
+    /** Retries loading appointments in case of previous failure. */
     fun retryLoadAppointments() {
         loadAppointments()
     }
 
+    /** Loads appointments for the current doctor from the repository. */
     private fun loadAppointments() {
         val doctorId = this.doctorId ?: run {
             _isLoading.value = false

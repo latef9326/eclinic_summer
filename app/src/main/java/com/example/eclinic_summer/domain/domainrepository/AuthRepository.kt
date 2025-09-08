@@ -1,12 +1,12 @@
 package com.example.eclinic_summer.domain.domainrepository
 
 import com.example.eclinic_summer.data.model.User
-import com.google.firebase.Firebase
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.auth
-import kotlinx.coroutines.flow.Flow
 
+/**
+ * Repository for handling authentication and user sessions.
+ */
 interface AuthRepository {
     suspend fun login(email: String, password: String): FirebaseUser?
     suspend fun register(email: String, password: String, fullName: String, role: String): FirebaseUser?

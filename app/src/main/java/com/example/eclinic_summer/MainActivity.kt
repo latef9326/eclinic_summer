@@ -45,7 +45,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Sprawdź i poproś o uprawnienia do powiadomień (dla Android 13+)
+        // Check and request notification permission (for Android 13+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
                     this,
@@ -60,7 +60,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // Pobierz token FCM dla tego urządzenia
+        // Get the FCM token for this device
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (!task.isSuccessful) {
                 Timber.w("Fetching FCM registration token failed", task.exception)
@@ -70,7 +70,7 @@ class MainActivity : ComponentActivity() {
             val token = task.result
             Timber.d("🔥 Current FCM Token: $token")
 
-            // Zapisz token w Firestore
+            // Save the token in Firestore
             val user = Firebase.auth.currentUser
             user?.let {
                 Firebase.firestore.collection("users")
@@ -97,6 +97,7 @@ fun EClinicNavigation() {
     val authViewModel: AuthViewModel = hiltViewModel()
     val currentUser by authViewModel.currentUser.collectAsState()
 
+    // Determine start destination based on user role
     val startDestination = when (currentUser?.role) {
         "admin" -> "admin_dashboard"
         "doctor" -> "doctor_dashboard"
@@ -115,7 +116,7 @@ fun EClinicNavigation() {
             ProfileScreen(navController, userId)
         }
 
-        // Auth Screens
+        // Authentication screens
         composable("login") { LoginScreen(navController) }
         composable("register") { RegisterScreen(navController) }
 
@@ -124,7 +125,7 @@ fun EClinicNavigation() {
         composable("doctor_dashboard") { DoctorDashboard(navController) }
         composable("admin_dashboard") { AdminDashboard(navController) }
 
-        // Doctors
+        // Doctors list
         composable(
             "doctors/{patientId}",
             arguments = listOf(navArgument("patientId") { type = NavType.StringType })
@@ -169,7 +170,7 @@ fun EClinicNavigation() {
             )
         }
 
-        // Appointment Detail
+        // Appointment details
         composable(
             "appointment_detail/{appointmentId}",
             arguments = listOf(navArgument("appointmentId") { type = NavType.StringType })
@@ -178,7 +179,7 @@ fun EClinicNavigation() {
             AppointmentDetailScreen(navController, appointmentId)
         }
 
-        // Medical History
+        // Medical history
         composable(
             "medical_history/{patientId}",
             arguments = listOf(navArgument("patientId") { type = NavType.StringType })

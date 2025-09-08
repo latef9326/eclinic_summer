@@ -13,26 +13,36 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel responsible for authentication, registration, and managing the current user.
+ * Exposes loading states, error messages, and current user data.
+ */
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val userRepository: UserRepository
 ) : ViewModel() {
 
+    /** Indicates whether an operation is in progress. */
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    /** Holds any error messages related to authentication. */
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
+    /** The currently authenticated user. */
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
     init {
-        // Automatycznie pobierz dane użytkownika przy starcie ViewModel
+        // Automatically fetch current user data when ViewModel starts
         fetchUserData()
     }
 
+    /**
+     * Registers a new user (patient or doctor) in Firebase Auth and Firestore.
+     */
     fun registerUser(
         fullName: String,
         email: String,
@@ -65,8 +75,8 @@ class AuthViewModel @Inject constructor(
     }
 
     /**
-     * Logowanie użytkownika i pobranie danych z obsługą roli
-     * onSuccess - callback, np. do nawigacji zależnej od roli użytkownika
+     * Logs in a user and fetches their data from Firestore.
+     * @param onSuccess Callback invoked after successful login with the user's role.
      */
     fun loginUser(
         email: String,
@@ -79,20 +89,14 @@ class AuthViewModel @Inject constructor(
                 Log.d("AuthViewModel", "Attempting login for: $email")
                 authRepository.loginUser(email, password).getOrThrow()
 
-                Log.d("AuthViewModel", "Login successful, fetching user data")
                 fetchUserData(
                     onSuccess = {
-                        Log.d("AuthViewModel", "User data fetched. Role: ${_currentUser.value?.role}")
                         val role = _currentUser.value?.role
                         onSuccess(role)
                     },
-                    onError = {
-                        Log.e("AuthViewModel", "Failed to fetch user data")
-                        onSuccess(null)
-                    }
+                    onError = { onSuccess(null) }
                 )
             } catch (e: Exception) {
-                Log.e("AuthViewModel", "Login failed: ${e.message}", e)
                 _errorMessage.value = "Login failed: ${e.message}"
                 onSuccess(null)
             } finally {
@@ -101,12 +105,13 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun getCurrentUserId(): String? {
-        return authRepository.getCurrentUserId()
-    }
+    /** Returns the UID of the currently logged-in user. */
+    fun getCurrentUserId(): String? = authRepository.getCurrentUserId()
 
     /**
-     * Pobranie danych użytkownika
+     * Fetches the current user's data from Firestore.
+     * @param onSuccess Callback invoked when data is successfully fetched.
+     * @param onError Callback invoked in case of an error.
      */
     fun fetchUserData(
         onSuccess: () -> Unit = {},
@@ -132,6 +137,7 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    /** Logs out the currently authenticated user. */
     fun logout() {
         authRepository.logout()
         _currentUser.value = null

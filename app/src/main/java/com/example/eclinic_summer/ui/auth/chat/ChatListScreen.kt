@@ -25,6 +25,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.eclinic_summer.data.model.User
 
+/**
+ * Screen displaying a searchable list of users (doctors or patients) for chat initiation.
+ *
+ * The content of the list depends on the role of the current user:
+ * - If the current user is a patient → list of doctors.
+ * - If the current user is a doctor → list of patients.
+ *
+ * @param navController Navigation controller used to handle navigation between screens.
+ * @param userId The ID of the currently logged-in user.
+ * @param viewModel The [ChatListViewModel] injected via Hilt.
+ */
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ChatListScreen(
@@ -38,12 +49,12 @@ fun ChatListScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusRequester = remember { FocusRequester() }
 
-    // Załaduj użytkowników odpowiednich dla roli
+    // Load users for the given role on initial composition
     LaunchedEffect(userId) {
         viewModel.loadUsers(userId)
     }
 
-    // Dynamiczny tytuł zależny od listy
+    // Dynamic title depending on the user role
     val title = remember(users) {
         if (users.isNotEmpty()) {
             if (users[0].role == "doctor") "Doctors" else "Patients"
@@ -141,6 +152,12 @@ fun ChatListScreen(
     }
 }
 
+/**
+ * Represents a single user item in the chat list.
+ *
+ * @param user The user (doctor or patient) to be displayed.
+ * @param onClick Callback triggered when the item is clicked.
+ */
 @Composable
 fun UserChatItem(
     user: User,
@@ -172,7 +189,7 @@ fun UserChatItem(
                     style = MaterialTheme.typography.titleMedium
                 )
 
-                // Jeśli lekarz → pokaż specjalizację, jeśli pacjent → pokaż email
+                // If doctor → show specialization, else → show email
                 if (user.role == "doctor") {
                     Text(
                         text = user.specialization ?: "General Practitioner",

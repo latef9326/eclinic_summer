@@ -14,6 +14,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.eclinic_summer.viewmodel.AuthViewModel
 
+/**
+ * Screen for user registration. Redirects to dashboard based on role after successful registration.
+ */
 @Composable
 fun RegisterScreen(
     navController: NavHostController,
@@ -33,7 +36,6 @@ fun RegisterScreen(
     val error by authViewModel.errorMessage.collectAsState()
     val currentUser by authViewModel.currentUser.collectAsState()
 
-    // Navigacja po rejestracji
     LaunchedEffect(currentUser) {
         currentUser?.let { user ->
             when (user.role) {
@@ -86,7 +88,6 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Dropdown: Role
         var expanded by remember { mutableStateOf(false) }
         Box {
             OutlinedTextField(

@@ -12,11 +12,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel for adding a new doctor.
+ * Handles input state, registration, and Firestore user creation.
+ */
 @HiltViewModel
 class AddDoctorViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val userRepository: UserRepository
 ) : ViewModel() {
+
     private val _fullName = MutableStateFlow("")
     val fullName: StateFlow<String> = _fullName.asStateFlow()
 
@@ -38,30 +43,17 @@ class AddDoctorViewModel @Inject constructor(
     private val _isSuccess = MutableStateFlow(false)
     val isSuccess: StateFlow<Boolean> = _isSuccess.asStateFlow()
 
-    fun onFullNameChange(value: String) {
-        _fullName.value = value
-    }
+    fun onFullNameChange(value: String) { _fullName.value = value }
+    fun onEmailChange(value: String) { _email.value = value }
+    fun onPasswordChange(value: String) { _password.value = value }
+    fun onSpecializationChange(value: String) { _specialization.value = value }
 
-    fun onEmailChange(value: String) {
-        _email.value = value
-    }
-
-    fun onPasswordChange(value: String) {
-        _password.value = value
-    }
-
-    fun onSpecializationChange(value: String) {
-        _specialization.value = value
-    }
-
+    /** Adds a new doctor: creates auth user and Firestore entry */
     fun addDoctor() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                // Create user in Firebase Auth
                 val uid = authRepository.createUserWithEmailAndPassword(email.value, password.value)
-
-                // Create user in Firestore
                 val doctor = User(
                     uid = uid,
                     email = email.value,
@@ -69,7 +61,6 @@ class AddDoctorViewModel @Inject constructor(
                     role = "doctor",
                     specialization = specialization.value
                 )
-
                 userRepository.updateUser(doctor)
                 _isSuccess.value = true
                 _error.value = null

@@ -16,6 +16,12 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+/**
+ * ViewModel responsible for managing the list of users available for chat.
+ *
+ * It handles loading users based on the current user's role (doctor or patient),
+ * filtering users by search query, and creating new conversations.
+ */
 @HiltViewModel
 class ChatListViewModel @Inject constructor(
     private val userRepository: UserRepository,
@@ -23,11 +29,17 @@ class ChatListViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
+    /** StateFlow holding the list of loaded users. */
     private val _users = MutableStateFlow<List<User>>(emptyList())
+
+    /** StateFlow holding the current search query for filtering users. */
     val searchQuery = MutableStateFlow("")
+
+    /** StateFlow holding the current error message, if any. */
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
+    /** StateFlow with users filtered by the current search query. */
     val filteredUsers = combine(_users, searchQuery) { users, query ->
         if (query.isEmpty()) users
         else users.filter {
@@ -39,12 +51,15 @@ class ChatListViewModel @Inject constructor(
         emptyList()
     )
 
+    /** Holds the role of the current user ("patient" or "doctor"). */
     private var currentUserRole: String? = null
 
     /**
-     * Ładuje użytkowników w zależności od roli zalogowanego użytkownika.
-     * - Pacjent widzi tylko lekarzy.
-     * - Lekarz widzi tylko pacjentów.
+     * Loads users depending on the role of the current user.
+     * - Patient sees only doctors.
+     * - Doctor sees only patients.
+     *
+     * @param currentUserId The ID of the currently logged-in user.
      */
     fun loadUsers(currentUserId: String) {
         viewModelScope.launch {
@@ -75,9 +90,13 @@ class ChatListViewModel @Inject constructor(
     }
 
     /**
-     * Tworzy nową konwersację między pacjentem a lekarzem.
-     * - Jeśli użytkownik to pacjent: (patientId = currentUserId, doctorId = otherUserId)
-     * - Jeśli użytkownik to lekarz: (patientId = otherUserId, doctorId = currentUserId)
+     * Creates a new conversation between a patient and a doctor.
+     * - If the current user is a patient: (patientId = currentUserId, doctorId = otherUserId)
+     * - If the current user is a doctor: (patientId = otherUserId, doctorId = currentUserId)
+     *
+     * @param currentUserId The ID of the currently logged-in user.
+     * @param otherUserId The ID of the user to start a conversation with.
+     * @param onSuccess Callback invoked with the new conversation ID upon successful creation.
      */
     fun createConversation(currentUserId: String, otherUserId: String, onSuccess: (String) -> Unit) {
         viewModelScope.launch {

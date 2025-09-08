@@ -12,20 +12,30 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+/**
+ * ViewModel responsible for managing a doctor's schedule.
+ * Supports loading availability, adding, updating, and deleting time slots.
+ */
 @HiltViewModel
 class DoctorScheduleViewModel @Inject constructor(
     private val userRepository: UserRepository
 ) : ViewModel() {
 
+    /** List of availability slots for the doctor. */
     private val _availability = MutableStateFlow<List<Availability>>(emptyList())
     val availability: StateFlow<List<Availability>> = _availability.asStateFlow()
 
+    /** Indicates whether an operation is currently loading. */
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    /** Holds any error that occurs during operations. */
     private val _error = MutableStateFlow<Throwable?>(null)
     val error: StateFlow<Throwable?> = _error.asStateFlow()
 
+    /**
+     * Loads the availability slots for a given doctor.
+     */
     fun loadAvailability(doctorId: String) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -43,6 +53,9 @@ class DoctorScheduleViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Adds a new availability slot for a doctor.
+     */
     fun addNewSlot(doctorId: String, newSlot: Availability) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -59,6 +72,9 @@ class DoctorScheduleViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Deletes an existing availability slot for a doctor.
+     */
     fun deleteSlot(doctorId: String, slot: Availability) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -75,12 +91,15 @@ class DoctorScheduleViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Updates an existing availability slot for a doctor.
+     */
     fun updateSlot(doctorId: String, oldSlot: Availability, newSlot: Availability) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
                 val slotId = oldSlot.id
-                require(slotId.isNotBlank()) { "Slot id cannot be blank" }
+                require(slotId.isNotBlank()) { "Slot ID cannot be blank" }
 
                 if (userRepository.updateAvailability(doctorId, slotId, newSlot)) {
                     _availability.value = _availability.value.map { current ->

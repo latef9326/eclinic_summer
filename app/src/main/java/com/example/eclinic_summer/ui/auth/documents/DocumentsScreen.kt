@@ -19,6 +19,9 @@ import com.example.eclinic_summer.viewmodel.DocumentsViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * Screen displaying a user's documents with options to download or delete.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DocumentsScreen(
@@ -45,7 +48,7 @@ fun DocumentsScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* Otwórz selektor plików */ }
+                onClick = { /* Open file selector */ }
             ) {
                 Icon(Icons.Filled.Add, "Add document")
             }
@@ -78,6 +81,9 @@ fun DocumentsScreen(
     }
 }
 
+/**
+ * Composable representing a single document item with download and delete actions.
+ */
 @Composable
 fun DocumentItem(
     document: Document,
@@ -120,4 +126,3 @@ fun DocumentItem(
         }
     }
 }
-

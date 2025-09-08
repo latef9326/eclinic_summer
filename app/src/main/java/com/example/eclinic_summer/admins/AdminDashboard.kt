@@ -20,6 +20,19 @@ import com.example.eclinic_summer.data.model.User
 import com.example.eclinic_summer.viewmodel.AdminViewModel
 import com.example.eclinic_summer.viewmodel.AuthViewModel
 
+/**
+ * Main admin dashboard screen.
+ *
+ * This screen allows administrators to manage doctors, patients, and appointments.
+ * It displays a tab-based UI with three sections:
+ * - **Doctors**: List of all doctors with options to add, edit, delete, or manage availability.
+ * - **Patients**: List of all patients with options to edit or delete.
+ * - **Appointments**: Delegates to [AdminAppointmentsScreen] for appointment management.
+ *
+ * @param navController Used for navigation between different screens.
+ * @param viewModel The [AdminViewModel] responsible for fetching and managing users.
+ * @param authViewModel The [AuthViewModel] used for logout functionality.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminDashboard(
@@ -70,6 +83,7 @@ fun AdminDashboard(
                     .fillMaxSize()
                     .padding(padding)
             ) {
+                // Tab navigation between Doctors, Patients, and Appointments
                 TabRow(selectedTabIndex = selectedTab) {
                     tabs.forEachIndexed { index, title ->
                         Tab(
@@ -80,6 +94,7 @@ fun AdminDashboard(
                     }
                 }
 
+                // Content depending on selected tab and loading/error states
                 when {
                     isLoading -> Box(Modifier.fillMaxSize(), Alignment.Center) {
                         CircularProgressIndicator()
@@ -120,6 +135,14 @@ fun AdminDashboard(
     )
 }
 
+/**
+ * Displays a list of doctors with options for edit, delete, and availability management.
+ *
+ * @param doctors The list of [User] objects representing doctors.
+ * @param navController Used for navigation to doctor-related screens.
+ * @param onEdit Callback when edit action is triggered for a doctor.
+ * @param onDelete Callback when delete action is triggered for a doctor.
+ */
 @Composable
 fun DoctorList(
     doctors: List<User>,
@@ -144,6 +167,14 @@ fun DoctorList(
     }
 }
 
+/**
+ * Displays an individual doctor's information with action buttons.
+ *
+ * @param doctor The doctor [User] object to display.
+ * @param onEdit Callback when edit action is triggered.
+ * @param onDelete Callback when delete action is triggered.
+ * @param onManageAvailability Callback when availability management is triggered.
+ */
 @Composable
 fun DoctorItem(
     doctor: User,
@@ -192,6 +223,14 @@ fun DoctorItem(
     }
 }
 
+/**
+ * Displays a list of patients with options for edit and delete.
+ *
+ * @param patients The list of [User] objects representing patients.
+ * @param navController Used for navigation to patient-related screens.
+ * @param onEdit Callback when edit action is triggered for a patient.
+ * @param onDelete Callback when delete action is triggered for a patient.
+ */
 @Composable
 fun PatientList(
     patients: List<User>,
@@ -213,6 +252,13 @@ fun PatientList(
     }
 }
 
+/**
+ * Displays an individual patient's information with action buttons.
+ *
+ * @param patient The patient [User] object to display.
+ * @param onEdit Callback when edit action is triggered.
+ * @param onDelete Callback when delete action is triggered.
+ */
 @Composable
 fun PatientItem(
     patient: User,

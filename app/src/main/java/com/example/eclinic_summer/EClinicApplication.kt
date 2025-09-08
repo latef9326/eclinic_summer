@@ -9,7 +9,7 @@ class EClinicApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        // Inicjalizacja Timber tylko w wersji debug
+        // Initialize Timber logging only in debug builds
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }

@@ -11,10 +11,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel for managing a single appointment's details.
+ * Handles loading appointment data and reporting loading/error states.
+ */
 @HiltViewModel
 class AppointmentDetailViewModel @Inject constructor(
     private val appointmentRepository: AppointmentRepository
 ) : ViewModel() {
+
     private val _appointment = MutableStateFlow<Appointment?>(null)
     val appointment: StateFlow<Appointment?> = _appointment.asStateFlow()
 
@@ -24,11 +29,14 @@ class AppointmentDetailViewModel @Inject constructor(
     private val _error = MutableStateFlow<Throwable?>(null)
     val error: StateFlow<Throwable?> = _error.asStateFlow()
 
+    /**
+     * Loads the appointment by its ID.
+     * Updates [appointment], [isLoading], and [error] states accordingly.
+     */
     fun loadAppointment(appointmentId: String) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                // Create a method in repository to get single appointment
                 _appointment.value = appointmentRepository.getAppointmentById(appointmentId)
                 _error.value = null
             } catch (e: Exception) {

@@ -8,6 +8,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.eclinic_summer.data.model.repository.Availability
 
+/**
+ * Composable showing a single appointment slot with a book button.
+ */
 @Composable
 fun AppointmentCard(
     slot: Availability,
@@ -24,7 +27,7 @@ fun AppointmentCard(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(16.dp)
         ) {
-            // Używamy dayOfWeek zamiast date, jeśli to jest dostępne
+            // Display dayOfWeek and time range
             Text("${slot.dayOfWeek}: ${slot.startTime} - ${slot.endTime}")
             Button(onClick = { onBook(slot) }) {
                 Text("Book")

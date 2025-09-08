@@ -14,6 +14,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.eclinic_summer.viewmodel.AuthViewModel
 
+/**
+ * Screen for user login. Redirects to dashboard based on user role after successful login.
+ */
 @Composable
 fun LoginScreen(
     navController: NavController,
@@ -26,28 +29,18 @@ fun LoginScreen(
     val errorMessage by viewModel.errorMessage.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
 
-    // Automatyczne przekierowanie po zalogowaniu na podstawie roli z logowaniem
     LaunchedEffect(currentUser) {
         currentUser?.let { user ->
             Log.d("LoginScreen", "Current user detected. UID: ${user.uid}, Role: ${user.role}")
             when (user.role) {
-                "doctor" -> {
-                    Log.d("LoginScreen", "Navigating to doctor dashboard")
-                    navController.navigate("doctor_dashboard") {
-                        popUpTo("login") { inclusive = true }
-                    }
+                "doctor" -> navController.navigate("doctor_dashboard") {
+                    popUpTo("login") { inclusive = true }
                 }
-                "patient" -> {
-                    Log.d("LoginScreen", "Navigating to patient dashboard")
-                    navController.navigate("patient_dashboard") {
-                        popUpTo("login") { inclusive = true }
-                    }
+                "patient" -> navController.navigate("patient_dashboard") {
+                    popUpTo("login") { inclusive = true }
                 }
-                "admin" -> {
-                    Log.d("LoginScreen", "Navigating to admin dashboard")
-                    navController.navigate("admin_dashboard") {
-                        popUpTo("login") { inclusive = true }
-                    }
+                "admin" -> navController.navigate("admin_dashboard") {
+                    popUpTo("login") { inclusive = true }
                 }
             }
         }
@@ -91,9 +84,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = {
-                viewModel.loginUser(email, password)
-            },
+            onClick = { viewModel.loginUser(email, password) },
             modifier = Modifier.fillMaxWidth(),
             enabled = !isLoading
         ) {

@@ -15,6 +15,9 @@ import androidx.navigation.NavController
 import com.example.eclinic_summer.data.model.repository.Availability
 import com.example.eclinic_summer.viewmodel.DoctorScheduleViewModel
 
+/**
+ * Screen for editing a doctor's schedule.
+ */
 @Composable
 fun ScheduleEditorScreen(
     navController: NavController,
@@ -81,6 +84,9 @@ fun ScheduleEditorScreen(
     }
 }
 
+/**
+ * Composable for displaying a single availability slot.
+ */
 @Composable
 fun AvailabilitySlotItem(
     slot: Availability,
@@ -107,6 +113,9 @@ fun AvailabilitySlotItem(
     }
 }
 
+/**
+ * Dialog for adding or editing an availability slot.
+ */
 @Composable
 fun AvailabilitySlotDialog(
     initialSlot: Availability?,

@@ -12,6 +12,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.eclinic_summer.viewmodel.AuthViewModel
 
+/**
+ * Dashboard screen for doctors.
+ *
+ * Provides navigation to manage schedule, view appointments, chats,
+ * profile, and logout.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DoctorDashboard(
@@ -40,7 +46,6 @@ fun DoctorDashboard(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // 1) Zarządzanie harmonogramem
                 Button(
                     onClick = {
                         currentUser?.uid?.let { uid ->
@@ -54,7 +59,6 @@ fun DoctorDashboard(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 2) Lista wizyt
                 Button(
                     onClick = {
                         currentUser?.uid?.let { uid ->
@@ -68,7 +72,6 @@ fun DoctorDashboard(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 3) Czaty
                 Button(
                     onClick = {
                         currentUser?.uid?.let {
@@ -82,11 +85,6 @@ fun DoctorDashboard(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // DODANY PRZYCISK PROFILU - w odpowiednim miejscu
                 Button(
                     onClick = {
                         currentUser?.uid?.let {
@@ -100,7 +98,6 @@ fun DoctorDashboard(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Logout na dole, ale w Column
                 Button(
                     onClick = {
                         authViewModel.logout()

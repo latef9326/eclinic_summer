@@ -6,6 +6,9 @@ import com.example.eclinic_summer.data.model.Message
 import com.example.eclinic_summer.data.model.Conversation
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * Repository for handling chat conversations and messages.
+ */
 interface ChatRepository {
     suspend fun sendMessage(message: Message)
     fun getMessages(conversationId: String): Flow<List<Message>>

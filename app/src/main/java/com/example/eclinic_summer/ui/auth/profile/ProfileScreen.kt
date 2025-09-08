@@ -13,6 +13,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.eclinic_summer.viewmodel.ProfileViewModel
 
+/**
+ * Screen for viewing and editing user profile information.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(

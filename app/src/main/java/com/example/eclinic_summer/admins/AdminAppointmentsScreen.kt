@@ -24,6 +24,13 @@ import androidx.navigation.NavController
 import com.example.eclinic_summer.data.model.Appointment
 import com.example.eclinic_summer.viewmodel.AdminAppointmentsViewModel
 
+/**
+ * Main screen for administrators to manage appointments in the eClinic application.
+ * Displays a list of all appointments with options to cancel or view details.
+ *
+ * @param navController Navigation controller for handling screen transitions
+ * @param viewModel ViewModel that handles appointment data and business logic
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminAppointmentsScreen(
@@ -34,6 +41,7 @@ fun AdminAppointmentsScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
 
+    // Load appointments when the screen is first displayed
     LaunchedEffect(Unit) {
         viewModel.loadAllAppointments()
     }
@@ -46,9 +54,7 @@ fun AdminAppointmentsScreen(
         Column(modifier = Modifier.padding(padding)) {
             when {
                 isLoading -> {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                    }
+                    LoadingIndicator()
                 }
                 error != null -> {
                     ErrorMessage(error!!) {
@@ -59,26 +65,65 @@ fun AdminAppointmentsScreen(
                     EmptyAppointmentsMessage()
                 }
                 else -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp)
-                    ) {
-                        items(appointments) { appointment ->
-                            AdminAppointmentItem(
-                                appointment = appointment,
-                                onCancel = { viewModel.cancelAppointment(appointment.appointmentId) },
-                                onDetails = {
-                                    navController.navigate("appointment_detail/${appointment.appointmentId}")
-                                }
-                            )
+                    AppointmentsList(
+                        appointments = appointments,
+                        onCancel = { appointmentId ->
+                            viewModel.cancelAppointment(appointmentId)
+                        },
+                        onDetails = { appointmentId ->
+                            navController.navigate("appointment_detail/$appointmentId")
                         }
-                    }
+                    )
                 }
             }
         }
     }
 }
 
+/**
+ * Displays a loading indicator centered on the screen.
+ */
+@Composable
+fun LoadingIndicator() {
+    Box(modifier = Modifier.fillMaxSize()) {
+        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+    }
+}
+
+/**
+ * Displays a list of appointments in a scrollable column.
+ *
+ * @param appointments List of appointments to display
+ * @param onCancel Callback function when cancel button is clicked
+ * @param onDetails Callback function when details button is clicked
+ */
+@Composable
+fun AppointmentsList(
+    appointments: List<Appointment>,
+    onCancel: (String) -> Unit,
+    onDetails: (String) -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp)
+    ) {
+        items(appointments) { appointment ->
+            AdminAppointmentItem(
+                appointment = appointment,
+                onCancel = { onCancel(appointment.appointmentId) },
+                onDetails = { onDetails(appointment.appointmentId) }
+            )
+        }
+    }
+}
+
+/**
+ * Individual appointment item card displaying appointment information and action buttons.
+ *
+ * @param appointment The appointment data to display
+ * @param onCancel Callback function triggered when cancel button is clicked
+ * @param onDetails Callback function triggered when details button is clicked
+ */
 @Composable
 fun AdminAppointmentItem(
     appointment: Appointment,
@@ -130,6 +175,12 @@ fun AdminAppointmentItem(
     }
 }
 
+/**
+ * Displays an error message with a retry button.
+ *
+ * @param error The exception that occurred
+ * @param onRetry Callback function triggered when retry button is clicked
+ */
 @Composable
 fun ErrorMessage(error: Throwable, onRetry: () -> Unit) {
     Column(
@@ -147,6 +198,9 @@ fun ErrorMessage(error: Throwable, onRetry: () -> Unit) {
     }
 }
 
+/**
+ * Displays a message when there are no appointments available.
+ */
 @Composable
 fun EmptyAppointmentsMessage() {
     Box(

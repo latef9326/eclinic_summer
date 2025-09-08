@@ -16,6 +16,17 @@ import androidx.navigation.NavController
 import com.example.eclinic_summer.data.model.repository.Availability
 import com.example.eclinic_summer.viewmodel.AvailabilityViewModel
 
+/**
+ * Screen for managing a doctor's availability slots.
+ *
+ * This screen allows administrators to view and delete availability slots
+ * for a specific doctor. The availability list is fetched from the
+ * [AvailabilityViewModel] based on the provided doctor ID.
+ *
+ * @param doctorId The unique identifier of the doctor whose availability is being managed.
+ * @param navController Navigation controller used to navigate between screens.
+ * @param viewModel The [AvailabilityViewModel] instance injected via Hilt.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageAvailabilityScreen(
@@ -27,6 +38,7 @@ fun ManageAvailabilityScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
 
+    // Load availability whenever doctorId changes
     LaunchedEffect(doctorId) {
         viewModel.loadAvailability(doctorId)
     }
@@ -44,37 +56,42 @@ fun ManageAvailabilityScreen(
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            if (isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+            when {
+                isLoading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
                 }
-            } else if (error != null) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Error: ${error?.message}", color = MaterialTheme.colorScheme.error)
+                error != null -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Error: ${error?.message}", color = MaterialTheme.colorScheme.error)
+                    }
                 }
-            } else if (availability.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("No availability slots found")
+                availability.isEmpty() -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("No availability slots found")
+                    }
                 }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp)
-                ) {
-                    items(availability) { slot ->
-                        AvailabilitySlotItem(
-                            slot = slot,
-                            onDelete = { viewModel.deleteSlot(doctorId, slot) }
-                        )
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp)
+                    ) {
+                        items(availability) { slot ->
+                            AvailabilitySlotItem(
+                                slot = slot,
+                                onDelete = { viewModel.deleteSlot(doctorId, slot) }
+                            )
+                        }
                     }
                 }
             }
@@ -82,6 +99,14 @@ fun ManageAvailabilityScreen(
     }
 }
 
+/**
+ * Displays a single availability slot with date, time, and booking status.
+ *
+ * Includes an option to delete the slot using a trailing delete icon button.
+ *
+ * @param slot The [Availability] object representing the availability slot.
+ * @param onDelete Callback invoked when the delete action is triggered.
+ */
 @Composable
 fun AvailabilitySlotItem(
     slot: Availability,

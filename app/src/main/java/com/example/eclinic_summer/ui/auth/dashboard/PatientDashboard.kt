@@ -10,6 +10,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.eclinic_summer.viewmodel.AuthViewModel
 
+/**
+ * Dashboard screen for patients.
+ *
+ * Shows welcome message, navigation buttons for booking appointments,
+ * viewing medical history, chats, profile, and logout.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PatientDashboard(
@@ -19,7 +25,7 @@ fun PatientDashboard(
     val currentUser by authViewModel.currentUser.collectAsState()
     val isLoading by authViewModel.isLoading.collectAsState()
 
-    // Automatyczne przekierowanie jeśli użytkownik nie jest zalogowany
+    // Automatically redirect if user is not logged in
     LaunchedEffect(currentUser) {
         if (currentUser == null && !isLoading) {
             navController.navigate("login") {
@@ -62,7 +68,6 @@ fun PatientDashboard(
                                     restoreState = true
                                 }
                             } ?: run {
-                                // Jeśli UID jest nullem, wymuś ponowne pobranie danych
                                 authViewModel.fetchUserData(
                                     onError = {
                                         navController.navigate("login") {
@@ -106,11 +111,6 @@ fun PatientDashboard(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // DODANY PRZYCISK PROFILU - w odpowiednim miejscu
                     Button(
                         onClick = {
                             currentUser?.uid?.let {
@@ -124,7 +124,6 @@ fun PatientDashboard(
 
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    // Logout na dole, ale w Column
                     Button(
                         onClick = {
                             authViewModel.logout()
